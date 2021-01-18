@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jacoco'
+    id "org.sonarqube" version "2.7"
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
+    testImplementation("org.junit.platform:junit-platform-engine:+")
+}
+
+jar {
+    archiveBaseName = 'gs-gradle'
+    archiveVersion =  '0.1.0'
+}
+
+application {
+    mainClassName = 'main.Main' 
+}
+
+task wraped(type: Wrapper) {
+    gradleVersion = '6.3'
+}
+
+run {
+    standardInput = System.in
+    args = ["-Djava.compiler=NONE"]
+}
+
+test {
+    useJUnitPlatform()
+    dependsOn 'cleanTest'
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = "0.8.5"
+    reportsDir = file("${buildDir}/JacocoReportDir")
+}
+
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        xml.destination file("${buildDir}/JacocoXMLReportDir/report.xml")
+    }
+}
+
+sonarqube {
+    properties {
+        property 'sonar.host.url', 'http://127.0.0.1:9000'
+        property 'sonar.java.binaries', 'build/classes'
+        property 'sonar.java.libraries', 'build/libs'
+    }
+    tasks['sonarqube'].dependsOn test
+}
+
+
+
+
